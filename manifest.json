@@ -3,6 +3,12 @@
   "name": "Outreach RSI Sync",
   "version": "0.1.0",
   "description": "Sync your RSI fleet to Outreach Syndicate (Edge/Chrome). Click the extension when on an RSI page to send your fleet to Outreach.",
+  "icons": {
+    "16": "icons/os.png",
+    "32": "icons/os.png",
+    "48": "icons/os.png",
+    "128": "icons/os.png"
+  },
   "permissions": ["scripting", "tabs", "storage", "activeTab", "windows"],
   "host_permissions": [
     "https://robertsspaceindustries.com/en/account/pledges*",
@@ -10,7 +16,13 @@
   ],
   "action": {
     "default_title": "Sync RSI fleet to Outreach",
-    "default_popup": "popup.html"
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icons/os.png",
+      "32": "icons/os.png",
+      "48": "icons/os.png",
+      "128": "icons/os.png"
+    }
   },
   "background": {
     "service_worker": "background.js"
