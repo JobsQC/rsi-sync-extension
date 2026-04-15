@@ -1,0 +1,36 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Outreach RSI Sync</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="container">
+      <header class="header">
+        <div>
+          <h1>Outreach — RSI Fleet</h1>
+          <div id="meta" class="muted"></div>
+        </div>
+      </header>
+
+      <div style="padding:16px">
+        <div style="display:flex;gap:8px;margin-bottom:12px">
+          <button id="btnRefresh" class="btn btn-primary" style="flex:1" data-i18n="refresh"></button>
+          <button id="btnSyncFleet" class="btn btn-secondary" style="flex:1" data-i18n="syncFleet"></button>
+          <button id="btnHelp" class="btn btn-secondary" style="padding:8px 10px;min-width:32px" data-i18n-title="howToUseTitle">?</button>
+        </div>
+
+        <div id="helpPanel" class="help-panel hidden">
+          <p class="help-title" data-i18n="howToUseTitle"></p>
+          <ol class="help-steps" id="helpSteps"></ol>
+          <p class="help-note" id="helpNote"></p>
+        </div>
+
+        <div id="status" class="muted small status"></div>
+      </div>
+    </div>
+    <script src="popup.js"></script>
+  </body>
+</html>
