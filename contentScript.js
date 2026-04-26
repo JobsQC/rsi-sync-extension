@@ -207,7 +207,18 @@
       window.addEventListener('message', (event) => {
         if (!event || event.source !== window) return
         const d = event.data || {}
-        if (d && d.type === 'RSI_EXTENSION_REQUEST') {
+        // Lightweight detection ping — respond immediately with stored data, no collectAccount
+        if (d && d.type === 'RSI_EXTENSION_DETECT') {
+          try {
+            chrome.storage.local.get('rsi_ships_latest', (d2) => {
+              try { window.postMessage({ type: 'RSI_EXTENSION_DETECT_RESPONSE', payload: (d2 && d2.rsi_ships_latest) || null }, '*') } catch (_) {}
+            })
+          } catch (_) {
+            try { window.postMessage({ type: 'RSI_EXTENSION_DETECT_RESPONSE', payload: null }, '*') } catch (_) {}
+          }
+        }
+        // Full sync request — triggers collectAccount
+        else if (d && d.type === 'RSI_EXTENSION_REQUEST') {
           // "respond-once" guard — fleet page removes its listener on the first RSI_EXTENSION_RESPONSE.
           let responded = false
           function postResponse(payload) {

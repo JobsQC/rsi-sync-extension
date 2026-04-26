@@ -9,7 +9,7 @@
     "48": "icons/os.png",
     "128": "icons/os.png"
   },
-  "permissions": ["scripting", "tabs", "storage", "activeTab", "windows"],
+  "permissions": ["scripting", "tabs", "storage", "activeTab", "windows", "alarms"],
   "host_permissions": [
     "https://robertsspaceindustries.com/en/account/pledges*",
     "https://outreach-syndicate.vercel.app/*"
