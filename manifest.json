@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Outreach RSI Sync",
-  "version": "0.1.0",
+  "version": "1.0.1",
   "description": "Sync your RSI fleet to Outreach Syndicate (Edge/Chrome). Click the extension when on an RSI page to send your fleet to Outreach.",
   "icons": {
     "16": "icons/os.png",
