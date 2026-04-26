@@ -4,6 +4,61 @@ const MANUFACTURERS = ['anvil','aegis','drake','origin','misc','robertsspaceindu
 
 let accountCollectLock = false;
 
+// ─── Orphaned tab cleanup ─────────────────────────────────────────────────────
+// Hidden tabs created by collectFromHiddenTab are tracked in chrome.storage.session
+// so they can be cleaned up if the service worker is killed mid-flight.
+const TRACKED_TABS_KEY = 'rsi_tracked_tabs';
+const TAB_CLEANUP_ALARM = 'rsi-tab-cleanup';
+
+function trackTab(tabId, windowId) {
+  try {
+    chrome.storage.session.get(TRACKED_TABS_KEY, (data) => {
+      try {
+        const tabs = (data && Array.isArray(data[TRACKED_TABS_KEY])) ? data[TRACKED_TABS_KEY] : [];
+        tabs.push({ tabId, windowId: windowId ?? null, createdAt: Date.now() });
+        chrome.storage.session.set({ [TRACKED_TABS_KEY]: tabs });
+        // Alarm fires after 2 min — enough margin over the ~35 s max processing time
+        chrome.alarms.create(TAB_CLEANUP_ALARM, { delayInMinutes: 2 });
+      } catch (_) {}
+    });
+  } catch (_) {}
+}
+
+function untrackTab(tabId) {
+  try {
+    chrome.storage.session.get(TRACKED_TABS_KEY, (data) => {
+      try {
+        const tabs = (data && Array.isArray(data[TRACKED_TABS_KEY])) ? data[TRACKED_TABS_KEY] : [];
+        const remaining = tabs.filter((t) => t.tabId !== tabId);
+        chrome.storage.session.set({ [TRACKED_TABS_KEY]: remaining });
+        if (!remaining.length) chrome.alarms.clear(TAB_CLEANUP_ALARM, () => {});
+      } catch (_) {}
+    });
+  } catch (_) {}
+}
+
+function cleanupOrphanedTabs() {
+  try {
+    chrome.storage.session.get(TRACKED_TABS_KEY, (data) => {
+      try {
+        const tabs = (data && Array.isArray(data[TRACKED_TABS_KEY])) ? data[TRACKED_TABS_KEY] : [];
+        if (!tabs.length) return;
+        for (const { tabId, windowId } of tabs) {
+          try {
+            if (windowId != null) chrome.windows.remove(windowId, () => {});
+            else chrome.tabs.remove(tabId, () => {});
+          } catch (_) {}
+        }
+        chrome.storage.session.set({ [TRACKED_TABS_KEY]: [] });
+      } catch (_) {}
+    });
+  } catch (_) {}
+}
+
+chrome.alarms.onAlarm.addListener((alarm) => {
+  if (alarm.name === TAB_CLEANUP_ALARM) cleanupOrphanedTabs();
+});
+
 function safeEncodePayload(payload) {
   try {
     return btoa(encodeURIComponent(JSON.stringify(payload)));
@@ -370,6 +425,7 @@ function collectFromHiddenTab(url) {
     try {
       function runInTab(tabId, ownWindowId) {
         const closeAndResolve = (result) => {
+          untrackTab(tabId);
           try {
             if (ownWindowId != null) chrome.windows.remove(ownWindowId, () => {});
             else chrome.tabs.remove(tabId, () => {});
@@ -402,6 +458,7 @@ function collectFromHiddenTab(url) {
             if (chrome.runtime.lastError || !tab || !tab.id) {
               return resolve({ ships: [], loggedOut: false });
             }
+            trackTab(tab.id, null);
             runInTab(tab.id, null);
           });
         } else {
@@ -410,6 +467,7 @@ function collectFromHiddenTab(url) {
             if (!win || !win.tabs || !win.tabs[0] || !win.tabs[0].id) {
               return resolve({ ships: [], loggedOut: false });
             }
+            trackTab(win.tabs[0].id, win.id);
             runInTab(win.tabs[0].id, win.id);
           });
         }
@@ -615,4 +673,5 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   }
 });
 
-chrome.runtime.onInstalled.addListener(() => { /* no-op */ });
+chrome.runtime.onInstalled.addListener(() => { cleanupOrphanedTabs(); });
+chrome.runtime.onStartup.addListener(() => { cleanupOrphanedTabs(); });
